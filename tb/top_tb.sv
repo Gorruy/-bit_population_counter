@@ -1,17 +1,17 @@
 module top_tb;
 
-  parameter NUMBER_OF_TEST_RUNS = 10000;
-  parameter DATA_BUS_WIDTH      = 16;
+  parameter NUMBER_OF_TEST_RUNS = 100;
+  parameter WIDTH               = 17;
 
-  bit                          clk;
-  logic                        srst;
-  bit                          srst_done;
+  bit                     clk;
+  logic                   srst;
+  bit                     srst_done;
 
-  logic                        data;
-  logic                        data_val;
+  logic [WIDTH - 1:0]     data_input;
+  logic                   data_val_input;
 
-  logic [DATA_BUS_WIDTH - 1:0] deser_data;
-  logic                        deser_data_val;
+  logic [$clog2(WIDTH):0] data_output;
+  logic                   data_val_output;
 
   // flag to indicate if there is an error
   bit test_succeed;
@@ -31,135 +31,144 @@ module top_tb;
       srst_done = 1'b1;
     end
 
-  deserializer #(
-    .DATA_BUS_WIDTH ( DATA_BUS_WIDTH )
+  bit_population_counter #(
+    .WIDTH      ( WIDTH           )
   ) DUT ( 
-    .clk_i            ( clk              ),
-    .srst_i           ( srst             ),
-    .deser_data_o     ( deser_data       ),
-    .deser_data_val_o ( deser_data_val   ),
-    .data_i           ( data             ),
-    .data_val_i       ( data_val         )
+    .clk_i      ( clk             ),
+    .srst_i     ( srst            ),
+    .data_o     ( data_output     ),
+    .data_val_o ( data_val_output ),
+    .data_i     ( data_input      ),
+    .data_val_i ( data_val_input  )
   );
 
-  typedef logic queued_data_t[$:DATA_BUS_WIDTH - 1];
+  mailbox #( logic [$clog2(WIDTH):0] ) output_data    = new();
+  mailbox #( logic [WIDTH - 1:0]     ) input_data     = new();
+  mailbox #( logic [WIDTH - 1:0]     ) generated_data = new();
 
-  mailbox #( queued_data_t ) output_data    = new(1);
-  mailbox #( queued_data_t ) input_data     = new(1);
-  mailbox #( queued_data_t ) generated_data = new(1);
-
-  function void display_error( input queued_data_t in,  
-                               input queued_data_t out
-                             );
-    $error( "expected values:%p, result value:%p", in[$:0], out[$:0]);
+  function void display_error ( input logic [WIDTH - 1:0] in,  
+                                input logic [$clog2(WIDTH):0] out
+                              );
+    $error( "expected values:%p, result value:%p", in, out );
 
   endfunction
 
-  task raise_transaction_strobe( logic data_to_send ); 
+  task raise_transaction_strobe( logic [WIDTH - 1:0] data_to_send ); 
     
     // data comes at random moment
     int delay;
+
     delay = $urandom_range(10, 0);
     ##(delay);
 
-    data     <= data_to_send;
-    data_val <= 1;
+    data_input     = data_to_send;
+    data_val_input = 1'b1;
     ## 1;
-    data     <= '0;
-    data_val <= '0; 
+    data_input     = '0;
+    data_val_input = 1'b0; 
 
   endtask
 
-  task compare_data ( mailbox #( queued_data_t ) input_data,
-                      mailbox #( queued_data_t ) output_data
+  task compare_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
+                      mailbox #( logic [$clog2(WIDTH):0] ) output_data
                     );
     
-    queued_data_t o_data;
-    queued_data_t i_data;
+    logic [WIDTH - 1:0]     i_data;
+    logic [$clog2(WIDTH):0] o_data;
 
-    output_data.get( o_data );
-    input_data.get( i_data );
-    
-    for ( int i = DATA_BUS_WIDTH; i > 0; i-- ) begin
-      if ( i_data[i - 1] != o_data[i - 1] )
-        begin
-          display_error( i_data, o_data );
-          test_succeed <= 0;
-          return;
-        end
-    end
+    if ( o_data > WIDTH )
+      begin
+        $error("read and wrote amounts of data is not equal! r:%d, w:%d", output_data.num(), input_data.num() );
+        test_succeed = 1'b0;
+        return;
+      end
+
+    while ( input_data.num() )
+      begin
+        input_data.get( i_data );
+        output_data.get( o_data );
+      end
     
   endtask
 
-  task generate_transaction ( mailbox #( queued_data_t ) generated_data );
+  task generate_transactions ( mailbox #( logic [WIDTH - 1:0] ) generated_data );
     
-    queued_data_t data_to_send;
+    logic [WIDTH - 1:0] data_to_send;
 
-    data_to_send = {};
-
-    for ( int i = 0; i < DATA_BUS_WIDTH; i++ ) begin
-      data_to_send.push_back( $urandom_range( 1, 0) );
-    end
-
-    generated_data.put( data_to_send );
+    repeat (NUMBER_OF_TEST_RUNS) 
+      begin
+        data_to_send = $urandom_range(WIDTH**2, 0);
+        generated_data.put( data_to_send );
+      end
 
   endtask
 
-  task send_data ( mailbox #( queued_data_t ) input_data,
-                   mailbox #( queued_data_t ) generated_data
+  task send_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
+                   mailbox #( logic [WIDTH - 1:0] ) generated_data
                  );
 
-    queued_data_t data_to_send;
-    queued_data_t exposed_data;
+    logic [WIDTH - 1:0] data_to_send;
+    logic [WIDTH - 1:0] exposed_data;
+    int                 no_delay;
 
-    exposed_data = {};
-    generated_data.get( data_to_send );
-    
-    for ( int i = 0; i < DATA_BUS_WIDTH; i++ ) begin
-      raise_transaction_strobe( data_to_send[$] );
-      exposed_data.push_front( data_to_send.pop_back );
-    end
+    while ( generated_data.num() )
+      begin
+        generated_data.get( data_to_send );
+        
+        raise_transaction_strobe( data_to_send );
+        exposed_data = data_to_send;
 
-    input_data.put( exposed_data );
+        input_data.put( exposed_data );
+      end
 
   endtask
 
-  task read_data ( mailbox #( queued_data_t ) output_data );
+  task read_data ( mailbox #( logic [$clog2(WIDTH):0] ) output_data );
     
-    queued_data_t recieved_data;
-
-    recieved_data = {};
+    logic [$clog2(WIDTH):0] recieved_data;
+    int                     time_without_data;
     
-    @( posedge deser_data_val );
-    recieved_data <= { << { deser_data } };
-
-    output_data.put(recieved_data);
+    forever
+      begin
+        @( posedge clk );
+        if ( data_val_output === 1'b1 )
+          begin
+            recieved_data     = data_output;
+            time_without_data = 0;
+            output_data.put(recieved_data);
+          end
+        else
+          begin
+            if ( time_without_data == 11*WIDTH )
+              return;
+            else 
+              time_without_data += 1;
+          end
+      end
 
   endtask
 
   initial begin
-    data         <= '0;
-    data_val     <= 0;
-    test_succeed <= 1;
+    data_input     <= '0;
+    data_val_input <= 1'b0;
+    test_succeed   <= 1'b1;
+
+    generate_transactions( generated_data );
 
     $display("Simulation started!");
     wait( srst_done );
+    fork
+      read_data( output_data );
+      send_data( input_data, generated_data );
+    join
 
-    repeat ( NUMBER_OF_TEST_RUNS )
-    begin
-      fork
-        generate_transaction( generated_data );
-        send_data( input_data, generated_data );
-        read_data( output_data );
-        compare_data( input_data, output_data );
-      join
-    end
-
+    compare_data( input_data, output_data );
     $display("Simulation is over!");
     if ( test_succeed )
       $display("All tests passed!");
     $stop();
   end
+  
 
 
 
