@@ -87,6 +87,8 @@ module top_tb;
       begin
         input_data.get( i_data );
         output_data.get( o_data );
+
+        if ()
       end
     
   endtask

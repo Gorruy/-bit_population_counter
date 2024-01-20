@@ -11,21 +11,26 @@ module bit_population_counter #(
   output logic                   data_val_o
 );
 
+  logic [$clog2(WIDTH):0] out_data_buffer;
+
   always_ff @( posedge clk_i )
     begin
       if ( data_val_i )
-        data_val_o <= 1'b1;
+        begin
+          data_val_o <= 1'b1;
+          data_o     <= out_data_buffer;
+        end
       else
         data_val_o <= 1'b0;
     end
 
   always_comb 
     begin
+      out_data_buffer = '0;
       if ( data_val_i )
         begin
-          data_o = '0;
           for ( int i = 0; i < WIDTH; i++) begin
-            data_o += data_i[i];
+            out_data_buffer += data_i[i];
           end
         end
     end
