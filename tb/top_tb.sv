@@ -88,7 +88,12 @@ module top_tb;
         input_data.get( i_data );
         output_data.get( o_data );
 
-        if ()
+        if ( $countones(i_data) != o_data )
+          begin
+            display_error( i_data, o_data );
+            test_succeed = 1'b0;
+            return;
+          end
       end
     
   endtask
