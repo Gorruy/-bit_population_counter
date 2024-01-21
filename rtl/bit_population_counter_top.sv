@@ -1,4 +1,4 @@
-module deserializer_top (
+module bit_population_counter_top (
   input  logic        clk_i,
   input  logic        srst_i,
 
@@ -23,9 +23,9 @@ module deserializer_top (
       data_val <= data_val_i; 
     end 
 
-  deserializer #(
+  bit_population_counter #(
     .DATA_BUS_WIDTH   ( 16             )
-  ) deserializer (
+  ) bit_population_counter (
     .clk_i            ( clk_i          ),
     .srst_i           ( srst           ),
 
