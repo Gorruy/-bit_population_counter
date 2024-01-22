@@ -27,8 +27,8 @@ module top_tb;
       ##1;
       srst <= 1'b1;
       ##1;
-      srst <= 1'b0;
-      srst_done = 1'b1;
+      srst      <= 1'b0;
+      srst_done <= 1'b1;
     end
 
   bit_population_counter #(
