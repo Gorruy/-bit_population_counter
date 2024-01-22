@@ -1,20 +1,20 @@
 module bit_population_counter_top (
-  input  logic        clk_i,
-  input  logic        srst_i,
+  input  logic                clk_i,
+  input  logic                srst_i,
 
-  input  logic        data_i,
-  input  logic        data_val_i,
-  output logic [15:0] deser_data_o,
-  output logic        deser_data_val_o
+  input  logic [15:0]         data_i,
+  input  logic                data_val_i,
+  output logic [$clog2(16):0] data_o,
+  output logic                data_val_o
 );
 
-  logic        srst;
+  logic                srst;
 
-  logic        data;
-  logic        data_val;
+  logic [15:0]         data;
+  logic                data_val;
 
-  logic [15:0] deser_data;
-  logic        deser_data_val;
+  logic [$clog2(16):0] data_output;
+  logic                data_val_output;
 
   always_ff @( posedge clk_i )
     begin
@@ -24,22 +24,22 @@ module bit_population_counter_top (
     end 
 
   bit_population_counter #(
-    .DATA_BUS_WIDTH   ( 16             )
+    .WIDTH      ( 16              )
   ) bit_population_counter (
-    .clk_i            ( clk_i          ),
-    .srst_i           ( srst           ),
+    .clk_i      ( clk_i           ),
+    .srst_i     ( srst            ),
 
-    .data_i           ( data           ),
-    .data_val_i       ( data_val       ),
+    .data_i     ( data            ),
+    .data_val_i ( data_val        ),
 
-    .deser_data_o     ( deser_data     ),
-    .deser_data_val_o ( deser_data_val ),  
+    .data_o     ( data_output     ),
+    .data_val_o ( data_val_output )  
 );
 
   always_ff @( posedge clk_i )
     begin
-      deser_data_o     <= deser_data;
-      deser_data_val_o <= deser_data_val;
+      data_o     <= data_output;
+      data_val_o <= data_val_output;
     end
 
 
