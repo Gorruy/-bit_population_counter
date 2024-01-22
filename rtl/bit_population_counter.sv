@@ -15,13 +15,18 @@ module bit_population_counter #(
 
   always_ff @( posedge clk_i )
     begin
-      if ( data_val_i )
-        begin
-          data_val_o <= 1'b1;
-          data_o     <= out_data_buffer;
-        end
-      else
+      if ( srst_i )
         data_val_o <= 1'b0;
+      else 
+        begin
+          if ( data_val_i )
+            begin
+              data_val_o <= 1'b1;
+              data_o     <= out_data_buffer;
+            end
+          else
+            data_val_o <= 1'b0;
+        end
     end
 
   always_comb 

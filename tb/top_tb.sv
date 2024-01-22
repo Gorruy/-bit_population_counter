@@ -78,7 +78,7 @@ module top_tb;
 
     if ( o_data > WIDTH )
       begin
-        $error("read and wrote amounts of data is not equal! r:%d, w:%d", output_data.num(), input_data.num() );
+        $error("read amount of set bit is more then word's length! r:%d, w:%d", output_data.num(), input_data.num() );
         test_succeed = 1'b0;
         return;
       end
@@ -115,7 +115,6 @@ module top_tb;
                  );
 
     logic [WIDTH - 1:0] data_to_send;
-    logic [WIDTH - 1:0] exposed_data;
     int                 no_delay;
 
     while ( generated_data.num() )
@@ -123,9 +122,8 @@ module top_tb;
         generated_data.get( data_to_send );
         
         raise_transaction_strobe( data_to_send );
-        exposed_data = data_to_send;
 
-        input_data.put( exposed_data );
+        input_data.put( data_to_send );
       end
 
   endtask
