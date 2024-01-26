@@ -20,23 +20,20 @@ module bit_population_counter #(
       else 
         begin
           if ( data_val_i )
-            begin
-              data_val_o <= 1'b1;
-              data_o     <= out_data_buffer;
-            end
+            data_val_o <= 1'b1;
           else
             data_val_o <= 1'b0;
         end
     end
 
+  always_ff @( posedge clk_i )
+    data_o <= out_data_buffer;
+
   always_comb 
     begin
       out_data_buffer = '0;
-      if ( data_val_i )
-        begin
-          for ( int i = 0; i < WIDTH; i++) begin
-            out_data_buffer += data_i[i];
-          end
-        end
+      for ( int i = 0; i < WIDTH; i++) begin
+        out_data_buffer += data_i[i];
+      end
     end
 endmodule

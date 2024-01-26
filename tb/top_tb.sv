@@ -76,13 +76,6 @@ module top_tb;
     logic [WIDTH - 1:0]     i_data;
     logic [$clog2(WIDTH):0] o_data;
 
-    if ( o_data > WIDTH )
-      begin
-        $error("read amount of set bit is more then word's length! r:%d, w:%d", output_data.num(), input_data.num() );
-        test_succeed = 1'b0;
-        return;
-      end
-
     while ( input_data.num() )
       begin
         input_data.get( i_data );
