@@ -1,6 +1,6 @@
 module top_tb;
 
-  parameter NUMBER_OF_TEST_RUNS = 100;
+  parameter NUMBER_OF_TEST_RUNS = 1000;
   parameter WIDTH               = 128;
 
   bit                     clk;
@@ -97,7 +97,7 @@ module top_tb;
 
     repeat (NUMBER_OF_TEST_RUNS) 
       begin
-        data_to_send = $urandom_range(WIDTH**2, WIDTH );
+        data_to_send = $urandom_range(WIDTH**2, WIDTH*20 );
         generated_data.put( data_to_send );
       end
 

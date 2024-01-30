@@ -15,7 +15,7 @@ module bit_population_counter #(
   localparam OUT_DATA_SIZE  = $clog2(int'(WIDTH_ALLIGNED));
 
   logic [WIDTH_ALLIGNED - 1:0]                                                data_i_buf;
-  
+
   logic [WIDTH_ALLIGNED / 8 - 1:0][WIDTH_ALLIGNED / 4 - 1:0][OUT_DATA_SIZE:0] buffers = '0 /* synthesis preserve */;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
@@ -36,7 +36,7 @@ module bit_population_counter #(
           begin
             for ( int j = 0; j < WIDTH_ALLIGNED / 8; j++ )
               begin
-                buffers[i][j] = buffers[i - 1][j*2] + buffers[i - 1][j*2 + 1];
+                buffers[i][j] <= buffers[i - 1][j*2] + buffers[i - 1][j*2 + 1];
               end
           end
       end
