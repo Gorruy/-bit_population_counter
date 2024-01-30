@@ -1,7 +1,7 @@
 module top_tb;
 
   parameter NUMBER_OF_TEST_RUNS = 100;
-  parameter WIDTH               = 17;
+  parameter WIDTH               = 128;
 
   bit                     clk;
   logic                   srst;
@@ -49,7 +49,7 @@ module top_tb;
   function void display_error ( input logic [WIDTH - 1:0] in,  
                                 input logic [$clog2(WIDTH):0] out
                               );
-    $error( "expected values:%p, result value:%p", in, out );
+    $error( "expected values:%p, result value:%p", $countones(in), out );
 
   endfunction
 
@@ -97,7 +97,7 @@ module top_tb;
 
     repeat (NUMBER_OF_TEST_RUNS) 
       begin
-        data_to_send = $urandom_range(WIDTH**2, 0);
+        data_to_send = $urandom_range(WIDTH**2, WIDTH );
         generated_data.put( data_to_send );
       end
 

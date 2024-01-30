@@ -2,18 +2,18 @@ module bit_population_counter_top (
   input  logic                clk_i,
   input  logic                srst_i,
 
-  input  logic [15:0]         data_i,
+  input  logic [127:0]         data_i,
   input  logic                data_val_i,
-  output logic [$clog2(16):0] data_o,
+  output logic [$clog2(128):0] data_o,
   output logic                data_val_o
 );
 
   logic                srst;
 
-  logic [15:0]         data;
+  logic [127:0]         data;
   logic                data_val;
 
-  logic [$clog2(16):0] data_output;
+  logic [$clog2(128):0] data_output;
   logic                data_val_output;
 
   always_ff @( posedge clk_i )
@@ -24,7 +24,7 @@ module bit_population_counter_top (
     end 
 
   bit_population_counter #(
-    .WIDTH      ( 16              )
+    .WIDTH      ( 128              )
   ) bit_population_counter (
     .clk_i      ( clk_i           ),
     .srst_i     ( srst            ),
