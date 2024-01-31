@@ -1,7 +1,7 @@
 module top_tb;
 
   parameter NUMBER_OF_TEST_RUNS = 1000;
-  parameter WIDTH               = 56;
+  parameter WIDTH               = 100;
 
   bit                     clk;
   logic                   srst;
@@ -23,9 +23,9 @@ module top_tb;
 
   initial 
     begin
-      srst <= 1'b0;
+      srst      <= 1'b0;
       ##1;
-      srst <= 1'b1;
+      srst      <= 1'b1;
       ##1;
       srst      <= 1'b0;
       srst_done <= 1'b1;

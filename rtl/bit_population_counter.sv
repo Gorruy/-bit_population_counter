@@ -11,13 +11,13 @@ module bit_population_counter #(
   output logic                       data_val_o
 );
 
-  localparam WIDTH_ALLIGNED     = ((WIDTH + 3) / 4) * 4;
+  localparam WIDTH_ALLIGNED     = 2**$clog2(WIDTH);
   localparam OUT_DATA_SIZE      = $clog2(WIDTH);
   localparam LNUMBER_OF_WINDOWS = $clog2(WIDTH_ALLIGNED / 4);
 
-  logic [WIDTH_ALLIGNED - 1:0]                               data_i_buf;
-  logic [$clog2(WIDTH_ALLIGNED) - 2:0][WIDTH_ALLIGNED - 1:0] buffers;
-  logic [LNUMBER_OF_WINDOWS - 1:0]                           data_val_buf;
+  logic [WIDTH_ALLIGNED - 1:0]                      data_i_buf;
+  logic [OUT_DATA_SIZE - 2:0][WIDTH_ALLIGNED - 1:0] buffers;
+  logic [LNUMBER_OF_WINDOWS - 1:0]                  data_val_buf;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
 
@@ -35,17 +35,17 @@ module bit_population_counter #(
       begin: adding
         always_ff @( posedge clk_i )
           begin
-            for ( int j = 0; j < WIDTH_ALLIGNED / (2**(2+i)); j++ )
+            for ( int j = 0; j < 2**$clog2(WIDTH_ALLIGNED) / (2**(2+i)); j++ )
               begin
-                buffers[i][(j+1)*(2**(2+i)) - 1 -: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) + 2**(1+i) - 1 -:(2**(1+i))] 
-                  + buffers[i - 1][j*(2**(2+i)) + 2**(2+i) - 1 -:(2**(1+i))] );
+                buffers[i][(j)*(2**(2+i)) +: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) +:(2**(1+i))] 
+                  + buffers[i - 1][j*(2**(2+i)) + 2**(1+i) +:(2**(1+i))] );
               end
           end
       end
 
   endgenerate
 
-  assign data_o = (OUT_DATA_SIZE)'(buffers[LNUMBER_OF_WINDOWS]);
+  assign data_o = buffers[LNUMBER_OF_WINDOWS][OUT_DATA_SIZE - 1:0];
 
   always_ff @( posedge clk_i )
     begin
