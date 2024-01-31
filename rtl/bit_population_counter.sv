@@ -37,8 +37,8 @@ module bit_population_counter #(
           begin
             for ( int j = 0; j < 2**$clog2(WIDTH_ALLIGNED) / (2**(2+i)); j++ )
               begin
-                buffers[i][(j)*(2**(2+i)) +: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) +:(2**(1+i))] 
-                  + buffers[i - 1][j*(2**(2+i)) + 2**(1+i) +:(2**(1+i))] );
+                buffers[i][(j)*(2**(2+i)) +: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) +: 2**(1+i)] 
+                  + buffers[i - 1][j*(2**(2+i)) + 2**(1+i) +: 2**(1+i)] );
               end
           end
       end

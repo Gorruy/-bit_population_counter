@@ -1,20 +1,20 @@
 module bit_population_counter_top (
-  input  logic                clk_i,
-  input  logic                srst_i,
+  input  logic                    clk_i,
+  input  logic                    srst_i,
 
-  input  logic [127:0]         data_i,
-  input  logic                data_val_i,
-  output logic [$clog2(128):0] data_o,
-  output logic                data_val_o
+  input  logic [127:0]             data_i,
+  input  logic                     data_val_i,
+  output logic [$clog2(128) - 1:0] data_o,
+  output logic                     data_val_o
 );
 
-  logic                srst;
+  logic                     srst;
 
-  logic [127:0]         data;
-  logic                data_val;
+  logic [127:0]              data;
+  logic                      data_val;
 
-  logic [$clog2(128):0] data_output;
-  logic                data_val_output;
+  logic [$clog2(128) - 1:0] data_output;
+  logic                     data_val_output;
 
   always_ff @( posedge clk_i )
     begin
