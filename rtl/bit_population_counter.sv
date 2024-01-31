@@ -11,12 +11,12 @@ module bit_population_counter #(
   output logic                   data_val_o
 );
 
-  localparam WIDTH_ALLIGNED = (WIDTH / 4) * 4;
-  localparam OUT_DATA_SIZE  = $clog2(int'(WIDTH_ALLIGNED));
+  localparam WIDTH_ALLIGNED = ((WIDTH + 3) / 4) * 4;
+  localparam OUT_DATA_SIZE  = $clog2(int'(WIDTH_ALLIGNED)) - 1;
 
-  logic [WIDTH_ALLIGNED - 1:0]                                                data_i_buf;
-
-  logic [WIDTH_ALLIGNED / 8 - 1:0][WIDTH_ALLIGNED / 4 - 1:0][OUT_DATA_SIZE:0] buffers = '0 /* synthesis preserve */;
+  logic [WIDTH_ALLIGNED - 1:0]                               data_i_buf;
+  logic [$clog2(WIDTH_ALLIGNED) - 2:0][WIDTH_ALLIGNED - 1:0] buffers = '0;
+  logic [$clog2(WIDTH_ALLIGNED / 4):0]                       data_val_buf;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
 
@@ -24,42 +24,41 @@ module bit_population_counter #(
   generate
     for ( k = 0; k < WIDTH_ALLIGNED / 4; k++ )
       begin: initial_count
-        small_counter sc0 ( .data_i(data_i_buf[k*4 + 3:k*4]), .data_o(buffers[0][k][4:0]) );
+        small_counter sc0 ( .data_i(data_i_buf[k*4 + 3 -: 4]), .data_o(buffers[0][k*4 + 3: k*4]) );
       end
   endgenerate
 
-  genvar i, j;
+  genvar i;
   generate
-    for ( i = 1; i < OUT_DATA_SIZE; i++ )
+    for ( i = 1; i < $clog2(WIDTH_ALLIGNED / 4) + 1; i++ )
       begin: adding
         always_ff @( posedge clk_i )
           begin
-            for ( int j = 0; j < WIDTH_ALLIGNED / 8; j++ )
+            for ( int j = 0; j < WIDTH_ALLIGNED / (2**(2+i)); j++ )
               begin
-                buffers[i][j] <= buffers[i - 1][j*2] + buffers[i - 1][j*2 + 1];
+                buffers[i][(j+1)*(2**(2+i)) - 1 -: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) + 2**(1+i) - 1 -:(2**(1+i))] 
+                  + buffers[i - 1][j*(2**(2+i)) + 2**(2+i) - 1 -:(2**(1+i))] );
               end
           end
       end
 
   endgenerate
 
-  always_ff @( posedge clk_i )
-    begin
-      data_o <= buffers[WIDTH_ALLIGNED / 8 - 1][WIDTH_ALLIGNED / 8];
-    end
+  assign data_o = (OUT_DATA_SIZE)'(buffers[$clog2(WIDTH_ALLIGNED / 4)]);
 
   always_ff @( posedge clk_i )
     begin
       if ( srst_i )
-        data_val_o <= 1'b0;
+        data_val_buf <= '0;
       else
         begin
-          if ( data_val_i )
-            data_val_o <= 1'b1;
-          else
-            data_val_o <= 1'b0;
-        end
+          data_val_buf[0] <= data_val_i;
+          for ( int i = 1; i < $clog2(WIDTH_ALLIGNED / 4); i++ )
+            data_val_buf[i] <= data_val_buf[i - 1];
+        end   
     end
+
+  assign data_val_o = data_val_buf[$clog2(WIDTH_ALLIGNED / 4) - 1];
 
 
 endmodule
