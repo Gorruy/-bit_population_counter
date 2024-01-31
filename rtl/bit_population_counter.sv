@@ -25,7 +25,7 @@ module bit_population_counter #(
   generate
     for ( k = 0; k < WIDTH_ALLIGNED / 4; k++ )
       begin: initial_count
-        small_counter sc0 ( .data_i(data_i_buf[k*4 + 3 -: 4]), .data_o(buffers[0][k*4 + 3: k*4]) );
+        small_counter sc0 ( .data_i(data_i_buf[k*4 + 3 -: 4]), .data_o(buffers[0][k*4 + 3 -: 4]) );
       end
   endgenerate
 
