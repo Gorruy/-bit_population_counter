@@ -1,22 +1,23 @@
 module bit_population_counter #(
   parameter WIDTH = 24
 )(
-  input  logic                   clk_i,
-  input  logic                   srst_i,
+  input  logic                       clk_i,
+  input  logic                       srst_i,
 
-  input  logic [WIDTH - 1:0]     data_i,
-  input  logic                   data_val_i,
+  input  logic [WIDTH - 1:0]         data_i,
+  input  logic                       data_val_i,
 
-  output logic [$clog2(WIDTH):0] data_o,
-  output logic                   data_val_o
+  output logic [$clog2(WIDTH) - 1:0] data_o,
+  output logic                       data_val_o
 );
 
-  localparam WIDTH_ALLIGNED = ((WIDTH + 3) / 4) * 4;
-  localparam OUT_DATA_SIZE  = $clog2(int'(WIDTH_ALLIGNED)) - 1;
+  localparam WIDTH_ALLIGNED     = ((WIDTH + 3) / 4) * 4;
+  localparam OUT_DATA_SIZE      = $clog2(WIDTH);
+  localparam LNUMBER_OF_WINDOWS = $clog2(WIDTH_ALLIGNED / 4);
 
   logic [WIDTH_ALLIGNED - 1:0]                               data_i_buf;
-  logic [$clog2(WIDTH_ALLIGNED) - 2:0][WIDTH_ALLIGNED - 1:0] buffers = '0;
-  logic [$clog2(WIDTH_ALLIGNED / 4):0]                       data_val_buf;
+  logic [$clog2(WIDTH_ALLIGNED) - 2:0][WIDTH_ALLIGNED - 1:0] buffers;
+  logic [LNUMBER_OF_WINDOWS - 1:0]                           data_val_buf;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
 
@@ -30,7 +31,7 @@ module bit_population_counter #(
 
   genvar i;
   generate
-    for ( i = 1; i < $clog2(WIDTH_ALLIGNED / 4) + 1; i++ )
+    for ( i = 1; i < LNUMBER_OF_WINDOWS + 1; i++ )
       begin: adding
         always_ff @( posedge clk_i )
           begin
@@ -44,7 +45,7 @@ module bit_population_counter #(
 
   endgenerate
 
-  assign data_o = (OUT_DATA_SIZE)'(buffers[$clog2(WIDTH_ALLIGNED / 4)]);
+  assign data_o = (OUT_DATA_SIZE)'(buffers[LNUMBER_OF_WINDOWS]);
 
   always_ff @( posedge clk_i )
     begin
@@ -53,12 +54,12 @@ module bit_population_counter #(
       else
         begin
           data_val_buf[0] <= data_val_i;
-          for ( int i = 1; i < $clog2(WIDTH_ALLIGNED / 4); i++ )
+          for ( int i = 1; i < LNUMBER_OF_WINDOWS; i++ )
             data_val_buf[i] <= data_val_buf[i - 1];
         end   
     end
 
-  assign data_val_o = data_val_buf[$clog2(WIDTH_ALLIGNED / 4) - 1];
+  assign data_val_o = data_val_buf[LNUMBER_OF_WINDOWS - 1];
 
 
 endmodule
