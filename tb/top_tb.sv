@@ -1,17 +1,17 @@
 module top_tb;
 
   parameter NUMBER_OF_TEST_RUNS = 1000;
-  parameter WIDTH               = 100;
+  parameter WIDTH               = 64;
 
-  bit                     clk;
-  logic                   srst;
-  bit                     srst_done;
+  bit                         clk;
+  logic                       srst;
+  bit                         srst_done;
 
-  logic [WIDTH - 1:0]     data_input;
-  logic                   data_val_input;
+  logic [WIDTH - 1:0]         data_input;
+  logic                       data_val_input;
 
-  logic [$clog2(WIDTH):0] data_output;
-  logic                   data_val_output;
+  logic [$clog2(WIDTH) - 1:0] data_output;
+  logic                       data_val_output;
 
   // flag to indicate if there is an error
   bit test_succeed;

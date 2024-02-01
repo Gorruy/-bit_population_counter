@@ -15,9 +15,9 @@ module bit_population_counter #(
   localparam OUT_DATA_SIZE      = $clog2(WIDTH);
   localparam LNUMBER_OF_WINDOWS = $clog2(WIDTH_ALLIGNED / 4);
 
-  logic [WIDTH_ALLIGNED - 1:0]                      data_i_buf;
-  logic [OUT_DATA_SIZE - 2:0][WIDTH_ALLIGNED - 1:0] buffers;
-  logic [LNUMBER_OF_WINDOWS - 1:0]                  data_val_buf;
+  logic [WIDTH_ALLIGNED - 1:0]                                             data_i_buf;
+  logic [LNUMBER_OF_WINDOWS - 1:0]                                         data_val_buf;
+  logic [OUT_DATA_SIZE - 2:0][WIDTH_ALLIGNED/4 - 1:0][OUT_DATA_SIZE - 1:0] buffers;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
 
@@ -25,7 +25,8 @@ module bit_population_counter #(
   generate
     for ( k = 0; k < WIDTH_ALLIGNED / 4; k++ )
       begin: initial_count
-        small_counter sc0 ( .data_i(data_i_buf[k*4 + 3 -: 4]), .data_o(buffers[0][k*4 + 3 -: 4]) );
+        small_counter #( .OUT_DATA_SIZE(OUT_DATA_SIZE)) sc0 ( .data_i(data_i_buf[k*4 + 3 -: 4]), 
+                                                              .data_o(buffers[0][k][OUT_DATA_SIZE - 1:0]) );
       end
   endgenerate
 
@@ -35,10 +36,10 @@ module bit_population_counter #(
       begin: adding
         always_ff @( posedge clk_i )
           begin
-            for ( int j = 0; j < 2**$clog2(WIDTH_ALLIGNED) / (2**(2+i)); j++ )
+            for ( int j = 0; j < WIDTH_ALLIGNED / (2**(2+i)); j++ )
               begin
-                buffers[i][(j)*(2**(2+i)) +: (2**(2+i))] <= ( buffers[i - 1][j*(2**(2+i)) +: 2**(1+i)] 
-                  + buffers[i - 1][j*(2**(2+i)) + 2**(1+i) +: 2**(1+i)] );
+                buffers[i][j] <= buffers[i - 1][j*2] + 
+                                 buffers[i - 1][j*2 + 1];
               end
           end
       end
@@ -52,11 +53,7 @@ module bit_population_counter #(
       if ( srst_i )
         data_val_buf <= '0;
       else
-        begin
-          data_val_buf[0] <= data_val_i;
-          for ( int i = 1; i < LNUMBER_OF_WINDOWS; i++ )
-            data_val_buf[i] <= data_val_buf[i - 1];
-        end   
+        data_val_buf <= { data_val_buf[LNUMBER_OF_WINDOWS - 1:0], data_val_i };  
     end
 
   assign data_val_o = data_val_buf[LNUMBER_OF_WINDOWS - 1];
