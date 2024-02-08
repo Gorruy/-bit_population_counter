@@ -14,10 +14,11 @@ module bit_population_counter #(
   localparam WIDTH_ALLIGNED     = 2**$clog2(WIDTH);
   localparam OUT_DATA_SIZE      = $clog2(WIDTH);
   localparam LNUMBER_OF_WINDOWS = $clog2(WIDTH_ALLIGNED / 4);
+  localparam NUMBER_OF_BUFFERS  = LNUMBER_OF_WINDOWS + 1;
 
-  logic [WIDTH_ALLIGNED - 1:0]                                             data_i_buf;
-  logic [LNUMBER_OF_WINDOWS - 1:0]                                         data_val_buf;
-  logic [OUT_DATA_SIZE - 2:0][WIDTH_ALLIGNED/4 - 1:0][OUT_DATA_SIZE - 1:0] buffers;
+  logic [WIDTH_ALLIGNED - 1:0]                                                 data_i_buf;
+  logic [LNUMBER_OF_WINDOWS - 1:0]                                             data_val_buf;
+  logic [NUMBER_OF_BUFFERS - 1:0][WIDTH_ALLIGNED/4 - 1:0][OUT_DATA_SIZE - 1:0] buffers;
 
   assign data_i_buf = (WIDTH_ALLIGNED)'(data_i);
 
@@ -44,7 +45,7 @@ module bit_population_counter #(
 
   endgenerate
 
-  assign data_o = buffers[LNUMBER_OF_WINDOWS][0][OUT_DATA_SIZE - 1:0];
+  assign data_o = buffers[NUMBER_OF_BUFFERS - 1][0];
 
   always_ff @( posedge clk_i )
     begin
